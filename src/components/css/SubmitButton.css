@@ -1,0 +1,20 @@
+.DonateButton {
+    width: 135px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: var(--soft-blue);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+  }
+  
+  .Donate-button svg {
+    margin-right: 100px;
+  }

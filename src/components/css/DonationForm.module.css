@@ -1,0 +1,11 @@
+.DonationForm {
+  flex: 1;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+@media (min-width: 992px) {
+  .DonationForm {
+    max-width: 80%;
+  }
+}

@@ -1,0 +1,70 @@
+.Navbar {
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #21213b;
+    border-bottom: 3px solid #2f2f4f;
+  }
+  
+  .Logo img {
+    width: 4vw;
+  }
+  
+  .ToggleButton {
+    display: none;
+    font-size: 2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  
+  .Links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .Links a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .SignIn {
+    margin-left: auto;
+  }
+  
+  .StartForFree {
+    padding: 0.5rem 1rem;
+    border: 2px solid black;
+    border-radius: 9999px;
+    background: white;
+    color: black;
+  }
+  
+  .Expanded {
+    display: block;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .ToggleButton {
+      display: block;
+    }
+  
+    .Links {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      background: white;
+      border-top: 1px solid #ddd;
+    }
+  
+    .Links.Expanded {
+      display: flex;
+    }
+  }
+  
