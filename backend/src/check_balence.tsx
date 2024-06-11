@@ -26,7 +26,8 @@ const walletOptions: WalletOptions = {
 const wallet = new Wallet(walletOptions);
 
 // This example syncs the account and prints the balance.
-export default async function checkBalance() {
+const checkBalance = async () => {
+    console.log('Checking balance...');
     for (const envVar of ['WALLET_DB_PATH', 'NODE_URL', 'STRONGHOLD_PASSWORD']) {
         if (!(envVar in process.env)) {
             throw new Error(`.env ${envVar} is undefined, see .env.example`);
@@ -50,10 +51,11 @@ export default async function checkBalance() {
         };
 
         // Only interested in new outputs here.
-        await wallet.listen([WalletEventType.NewOutput], callback);
+        // await wallet.listen([WalletEventType.NewOutput], callback);
         // const account = await wallet.getAccount('Cheesecake');
-        // const account = await wallet.getAccount('Alice');
-        const account = await wallet.getAccount('Cheesecake');
+        const account = await wallet.getAccount('Alice');
+        // wallet.removeLatestAccount();
+        // const account = await wallet.getAccount('Cheesecake');
         const addresses = await account.addresses();
 
         for (const address of addresses) console.log(address.address);
@@ -64,32 +66,63 @@ export default async function checkBalance() {
         console.log('Sent transactions:');
         // for (const transaction of transactions)
         //     console.log(transaction.transactionId);
+        let SendingAddressandAmount = []
+        for (let i = 0; i < transactions.length; i++) {
+            const transactionDetails = transactions[i]
+            const transactionsEssence = transactionDetails.payload.essence as RegularTransactionEssence
+            console.log(transactionsEssence.outputs)
+            let output = transactionsEssence.outputs[0] as CommonOutput
+            // for (let output of transactionsEssence.outputs as CommonOutput[]) {
+            console.log(output)
+            // output = output as BasicOutput;
+            if (output.type === 3) { // BasicOutput
+                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
+                const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
+                const address = addressUnlockCondition.address.toString();
+                SendingAddressandAmount.push({ address: address, amount: output.amount, transactionId: transactions[i].transactionId });
+                // Now you have the address, you can track transactions involving this address
+                // console.log(`Address Type: ${addressType}`);
+                // console.log(`Sent to address: ${address} Amount: ${output.amount}`);
+            }
+            else if (output.type === 4) { // AliasOutput
+                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
+                const aliasId = addressUnlockCondition.address;
+                console.log(`AliasOutput with aliasId: ${aliasId} Amount: ${output.amount}`);
+            }
+            // }
+        }
+        console.log(SendingAddressandAmount)
         const incomingTransactions = await account.incomingTransactions();
         console.log('Incoming transactions:');
         for (const transaction of incomingTransactions) {
             console.log(transaction.transactionId);
         }
-        const transactionDetails = incomingTransactions[0]
-        const transactionsEssence = transactionDetails.payload.essence as RegularTransactionEssence
-        // console.log(transactionsEssence.outputs)
-        // for (let output of transactionsEssence.outputs as CommonOutput[]) {
-        //     console.log(output)
-        //     // output = output as BasicOutput;
-        //     if (output.type === 3) { // BasicOutput
-        //         const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
-        //         const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
-        //         const address = addressUnlockCondition.address;
-
-        //         // Now you have the address, you can track transactions involving this address
-        //         console.log(`Address Type: ${addressType}`);
-        //         console.log(`Sent to address: ${address} Amount: ${output.amount}`);
-        //     }
-        //     else if (output.type === 4) { // AliasOutput
-        //         const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
-        //         const aliasId = addressUnlockCondition.address;
-        //         console.log(`AliasOutput with aliasId: ${aliasId} Amount: ${output.amount}`);
-        //     }
-        // }
+        let IncomingAddressandAmount = []
+        for (let i = 0; i < incomingTransactions.length; i++) {
+            const transactionDetails = incomingTransactions[i]
+            const transactionsEssence = transactionDetails.payload.essence as RegularTransactionEssence
+            console.log(transactionsEssence.outputs)
+            let output = transactionsEssence.outputs[0] as CommonOutput
+            // for (let output of transactionsEssence.outputs as CommonOutput[]) {
+            console.log(output)
+            // output = output as BasicOutput;
+            if (output.type === 3) { // BasicOutput
+                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
+                const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
+                const address = addressUnlockCondition.address.toString();
+                IncomingAddressandAmount.push({ address: address, amount: output.amount, transactionId: incomingTransactions[i].transactionId });
+                // Now you have the address, you can track transactions involving this address
+                // console.log(`Address Type: ${addressType}`);
+                // console.log(`Sent to address: ${address} Amount: ${output.amount}`);
+            }
+            else if (output.type === 4) { // AliasOutput
+                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
+                const aliasId = addressUnlockCondition.address;
+                console.log(`AliasOutput with aliasId: ${aliasId} Amount: ${output.amount}`);
+            }
+            // }
+        }
+        console.log(IncomingAddressandAmount)
         // Sync new outputs from the node.
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const _syncBalance = await account.sync();
@@ -98,15 +131,15 @@ export default async function checkBalance() {
         const balance = await account.getBalance();
         console.log('Balance: ', balance.baseCoin);
         const primaryAddress = addresses[0].address;
-        await updateDatabase(primaryAddress, transactions, incomingTransactions, balance.baseCoin);
+        await updateDatabase(primaryAddress, transactions, incomingTransactions, balance.baseCoin, IncomingAddressandAmount, SendingAddressandAmount);
 
         return { transactions, incomingTransactions, balance };
     } catch (error) {
         console.error('Error: ', error);
     }
 }
-
-checkBalance();
+export default checkBalance;
+// checkBalance();
 
 // checkBalance().then(() => process.exit());
 
