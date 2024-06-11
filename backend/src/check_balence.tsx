@@ -1,6 +1,7 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import {  Wallet, CoinType, WalletOptions, Event, WalletEventType, RegularTransactionEssence, BasicOutput, CommonOutput, AddressUnlockCondition } from '@iota/sdk';
+import { Wallet, CoinType, WalletOptions, Event, WalletEventType, RegularTransactionEssence, BasicOutput, CommonOutput, AddressUnlockCondition, Balance } from '@iota/sdk';
+import { updateDatabase } from './index';
 
 // This example uses secrets in environment variables for simplicity which should not be done in production.
 require('dotenv').config({ path: '.env' });
@@ -25,7 +26,7 @@ const walletOptions: WalletOptions = {
 const wallet = new Wallet(walletOptions);
 
 // This example syncs the account and prints the balance.
-async function run() {
+export default async function checkBalance() {
     for (const envVar of ['WALLET_DB_PATH', 'NODE_URL', 'STRONGHOLD_PASSWORD']) {
         if (!(envVar in process.env)) {
             throw new Error(`.env ${envVar} is undefined, see .env.example`);
@@ -36,7 +37,7 @@ async function run() {
 
         // Create a new account
         // const account = await wallet.createAccount({
-        //     alias: 'Donation',
+        //     alias: 'Alice',
         // });
         // console.log('Generated new account:', account.getMetadata().alias);
 
@@ -45,14 +46,14 @@ async function run() {
             console.log('Event:', event.event);
 
             // Exit after receiving an event.
-            process.exit(0);
+            // process.exit(0);
         };
 
         // Only interested in new outputs here.
         await wallet.listen([WalletEventType.NewOutput], callback);
         // const account = await wallet.getAccount('Cheesecake');
         // const account = await wallet.getAccount('Alice');
-        const account = await wallet.getAccount('Donation');
+        const account = await wallet.getAccount('Cheesecake');
         const addresses = await account.addresses();
 
         for (const address of addresses) console.log(address.address);
@@ -61,44 +62,51 @@ async function run() {
 
         const transactions = await account.transactions();
         console.log('Sent transactions:');
-        for (const transaction of transactions)
-            console.log(transaction.transactionId);
+        // for (const transaction of transactions)
+        //     console.log(transaction.transactionId);
         const incomingTransactions = await account.incomingTransactions();
         console.log('Incoming transactions:');
         for (const transaction of incomingTransactions) {
             console.log(transaction.transactionId);
         }
-        const transactionDetails = incomingTransactions[0] 
+        const transactionDetails = incomingTransactions[0]
         const transactionsEssence = transactionDetails.payload.essence as RegularTransactionEssence
-        console.log(transactionsEssence.outputs)
-        for (let output of transactionsEssence.outputs as CommonOutput[]) {
-            console.log(output)
-            // output = output as BasicOutput;
-            if (output.type === 3) { // BasicOutput
-                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
-                const addressType = (addressUnlockCondition.type == 0)?'Ed25519':(addressUnlockCondition.type == 4)?'Alias':'Unknown';
-                const address = addressUnlockCondition.address;
-                
-                // Now you have the address, you can track transactions involving this address
-                console.log(`Address Type: ${addressType}`);
-                console.log(`Sent to address: ${address} Amount: ${output.amount}`);
-            } 
-            else if (output.type === 4) { // AliasOutput
-                const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
-                const aliasId = addressUnlockCondition.address;
-                console.log(`AliasOutput with aliasId: ${aliasId} Amount: ${output.amount}`);
-            }
-        }
+        // console.log(transactionsEssence.outputs)
+        // for (let output of transactionsEssence.outputs as CommonOutput[]) {
+        //     console.log(output)
+        //     // output = output as BasicOutput;
+        //     if (output.type === 3) { // BasicOutput
+        //         const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
+        //         const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
+        //         const address = addressUnlockCondition.address;
+
+        //         // Now you have the address, you can track transactions involving this address
+        //         console.log(`Address Type: ${addressType}`);
+        //         console.log(`Sent to address: ${address} Amount: ${output.amount}`);
+        //     }
+        //     else if (output.type === 4) { // AliasOutput
+        //         const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
+        //         const aliasId = addressUnlockCondition.address;
+        //         console.log(`AliasOutput with aliasId: ${aliasId} Amount: ${output.amount}`);
+        //     }
+        // }
         // Sync new outputs from the node.
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const _syncBalance = await account.sync();
 
         // After syncing the balance can also be computed with the local data
         const balance = await account.getBalance();
-        console.log('Balance: ', balance);
+        console.log('Balance: ', balance.baseCoin);
+        const primaryAddress = addresses[0].address;
+        await updateDatabase(primaryAddress, transactions, incomingTransactions, balance.baseCoin);
+
+        return { transactions, incomingTransactions, balance };
     } catch (error) {
         console.error('Error: ', error);
     }
 }
 
-run().then(() => process.exit());
+checkBalance();
+
+// checkBalance().then(() => process.exit());
+

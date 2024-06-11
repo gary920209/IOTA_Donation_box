@@ -35,7 +35,7 @@ const Sidebar: React.FC = () => {
             <p className="title">Main</p>
             <ul>
               <li className={activeMenu === 'dashboard' ? 'active' : ''} onClick={() => handleMenuClick('dashboard')}>
-                <a href="#">
+                <a href="/personal/dashboard">
                   <HouseSimple className="icon" />
                   <span className="text">Dashboard</span>
                 </a>

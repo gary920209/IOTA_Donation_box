@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import styled from "styled-components";
-import './App.css';
+import './global.css';
 import Navbar from './components/NavBar';
 import Sidebar from './components/Sidebar';
 
@@ -22,7 +22,9 @@ const MainWrapper = styled.div`
 
 const ProjectPage = lazy(() => import('./pages/project_page'));
 const PersonalPage = lazy(() => import('./pages/personal_page'));
-const Donation = lazy(() => import('./pages/donation'));
+const PersonalPageTable = lazy(() => import('./pages/personal_page_table'));
+
+// const Donation = lazy(() => import('./pages/donation'));
 
 function App() {
   const ref: RefObject<HTMLDivElement>  = useRef(null);
@@ -46,11 +48,23 @@ function App() {
               <PersonalPage />
             </Suspense>
           } />
-          <Route path='donation' element={
+          <Route path='personal/dashboard' element={
+            <Suspense fallback={<Skeleton count={5} />}>
+              <PersonalPageTable />
+            </Suspense>
+          } />
+
+          <Route path='project' element={
+            <Suspense fallback={<Skeleton count={5} />}>
+              <ProjectPage />
+            </Suspense>
+          } />
+
+          {/* <Route path='donation' element={
            <Suspense fallback={<Skeleton count={5} />}>
               <Donation />
             </Suspense>
-          } />
+          } /> */}
 
           {/* <Route path='introductions' element={
             <Suspense fallback={<LoadingPage />}>
