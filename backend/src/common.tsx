@@ -4,7 +4,7 @@ import { initLogger, Wallet, CoinType, WalletOptions } from '@iota/sdk';
 require('dotenv').config({ path: '.env' });
 
 async function getUnlockedWallet() {
-    initLogger();
+    // initLogger();
     for (const envVar of [
         'NODE_URL',
         'STRONGHOLD_PASSWORD',

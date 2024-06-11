@@ -17,8 +17,9 @@ const DonationWrapper = styled.div`
   // background-color: #2E4053;
 `;
 
-const DonationHeader = styled.h1`
+const AmountWrapper = styled.h1`
   color: white;
+  font-size: 2.5rem
 `
 
 const data: Transactions[] = [
@@ -55,15 +56,32 @@ const data: Transactions[] = [
 ]
 
 const PersonalPage: React.FC = () => {
+  const [balance, setBalance] = useState<Number>(0);
   const [donationRecords, setDonationRecords] = useState<Transactions[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const data = await getItems();
+        const data = await getItemByName("Oscar");
         console.log(data);
-        setDonationRecords(data);
+        setBalance(Number(data.balance.total))
+        // id: string
+        // amount: number
+        // status: "pending" | "processing" | "success" | "failed"
+        // address: string
+        // date ?: string
+        const transactionsData = data.transactions.map((transaction: any) => ({
+          id: transaction.transactionId,
+          date: transaction.timestamp,
+          status: 'success', 
+          address: transaction.address,
+          amount: transaction.amount,
+          // Add other fields as needed
+        }));
+        setDonationRecords(transactionsData);
+        console.log(donationRecords);
+        console.log(balance)
       } catch (error) {
         console.error('Error fetching items:', error);
       } finally {
@@ -72,7 +90,7 @@ const PersonalPage: React.FC = () => {
     };
 
     fetchItems();
-  }, []);
+  }, [balance]);
 
   const handleDonate = (amount: number) => {
     const newRecord: Transactions = {
@@ -94,6 +112,7 @@ const PersonalPage: React.FC = () => {
         <ProjectModal title="Project 3" description="Description of Project 3" />
       </div>
       <DonationForm onDonate={handleDonate} /> */}
+      <AmountWrapper>Current Total Amount: {Number(balance)}</AmountWrapper>
       <DataTable data={donationRecords}/>
       {/* <DonationHistory records={donationRecords} /> */}
     </DonationWrapper>

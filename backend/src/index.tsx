@@ -4,7 +4,10 @@ import mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import checkBalance from './check_balence';
 import { sendTransaction } from './send_transactions';
+import { queue } from 'async';
+import { Mutex } from 'async-mutex';
 
+const mutex = new Mutex();
 const app = express();
 const port = 8080;
 require('dotenv').config({ path: '.env' });
@@ -37,8 +40,10 @@ db.once('open', () => {
 
 // type Status = 'success' | 'processing' | 'pending' | 'failed';
 const transactionSchema = new mongoose.Schema({
+  transaction: Object,
   transactionId: String,
   amount: Number,
+  address: String,
   timestamp: Date,
 });
 
@@ -47,6 +52,14 @@ type Transaction = {
   amount: Number,
   timestamp: Date,
 };
+
+
+interface ITransaction extends Document {
+  transactionId?: string | null;
+  amount?: number | null;
+  address?: string | null;
+  timestamp?: Date | null;
+}
 
 const balanceSchema = new mongoose.Schema({
   total: BigInt,
@@ -60,6 +73,7 @@ const itemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true, unique: true },
   transactions: { type: [transactionSchema], required: false },
+  incomingTransactions: { type: [transactionSchema], required: false },
   balance: { type: balanceSchema, required: false },
   amount: { type: Number, required: true },
   status: { type: String, required: true },
@@ -69,7 +83,7 @@ const itemSchema = new mongoose.Schema({
 const User = mongoose.model('IOTADB', itemSchema);
 console.log(User);
 
-export async function updateDatabase(address: string, transactions: any[], incomingTransactions: any[], balance: any) {
+export async function updateDatabase(address: string, transactions: any[], incomingTransactions: any[], balance: any, IncomingAddressandAmount: any[], SendingAddressandAmount: any[]) {
   try {
     let user = await User.findOne({ address });
     if (!user) {
@@ -78,17 +92,29 @@ export async function updateDatabase(address: string, transactions: any[], incom
       });
     }
 
-    // user.transactions = transactions.map(transaction => ({
-    //   transactionId: transaction.transactionId,
-    //   amount: transaction.amount,
-    //   timestamp: new Date(),
-    // }));
-    // const newTransaction = {
-    //   transactionId: new mongoose.Types.ObjectId().toString(),
-    //   amount: transaction.amount,
-    //   timestamp: new Date(),
-    // };
-    // user.transactions?.push(newTransaction);
+    user.transactions = SendingAddressandAmount.map(transaction => ({
+      transactionId: transaction.transactionId,
+      amount: transaction.amount,
+      address: transaction.address,
+      timestamp: new Date(),
+    })) as Types.DocumentArray<{
+      transactionId?: string | null | undefined;
+      amount?: number | null | undefined;
+      timestamp?: Date | null | undefined;
+      address?: string | null | undefined;
+    }> | null | undefined;
+
+    user.incomingTransactions = IncomingAddressandAmount.map(transaction => ({
+      transactionId: transaction.transactionId,
+      amount: transaction.amount,
+      address: transaction.address,
+      timestamp: new Date(),
+    })) as Types.DocumentArray<{
+      transactionId?: string | null | undefined;
+      amount?: number | null | undefined;
+      timestamp?: Date | null | undefined;
+      address?: string | null | undefined;
+    }> | null | undefined;
 
     user.balance = {
       total: balance.total,
@@ -100,6 +126,17 @@ export async function updateDatabase(address: string, transactions: any[], incom
     console.error('Error updating database:', error);
   }
 }
+
+// Create a queue with a concurrency of 1 (tasks will be processed one at a time)
+const transactionQueue = queue(async (task: () => Promise<void>, callback) => {
+  try {
+    await task();
+    callback(null);
+  } catch (error) {
+    // callback(error);
+    console.error('Error processing task:', error);
+  }
+}, 1);
 
 // Define a simple route
 app.get('/', (req: Request, res: Response) => {
@@ -139,20 +176,24 @@ app.put('/items/:id', async (req: Request, res: Response) => {
     res.status(400).send(error);
   }
 });
-
+let flag = 0;
 app.get('/checkbalance', async (req: Request, res: Response) => {
   const address = req.params.address;
 
-  try {
-    // Call the checkBalance function
-    const check_balance = await checkBalance();
-    console.log(check_balance);
-    res.status(200).json(check_balance);
-    // res.status(200).json({ message: 'Balance checked successfully' });
-  } catch (error) {
-    console.error('Error checking balance:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  transactionQueue.push(async () => {
+    try {
+      // Call the checkBalance function
+      if (flag == 0) {
+        console.log("Checking balance");
+        const check_balance = await checkBalance();
+        console.log(check_balance);
+        res.status(200).json(check_balance);
+      }
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 });
 
 // Endpoint to insert a new item (alternative to POST /items)
@@ -173,13 +214,16 @@ app.post('/send_transaction', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  try {
-    await sendTransaction({ accountName, amount: Number(amount), recvAddress });
-    res.status(200).json({ message: 'Transaction sent successfully' });
-  } catch (error) {
-    console.error('Error sending transaction:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  transactionQueue.push(async () => {
+    try {
+      // Call the sendTransaction function
+      await sendTransaction({ accountName, amount: Number(amount), recvAddress });
+      res.status(200).json({ message: 'Transaction sent successfully' });
+    } catch (error) {
+      console.error('Error sending transaction:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 });
 
 app.post('/box_upload', async (req: Request, res: Response) => {
