@@ -29,5 +29,5 @@
   "include": [
     "src",
     "src/.tsx"
-, "babel.config.js", "src/lib"  ]
+, "babel.config.js", "src/lib", "tailwind.config.js"  ]
 }
