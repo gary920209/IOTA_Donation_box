@@ -6,6 +6,9 @@
     padding: 1rem;
     background: #21213b;
     border-bottom: 3px solid #2f2f4f;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
   }
   
   .Logo img {

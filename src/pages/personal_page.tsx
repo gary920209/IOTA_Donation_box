@@ -5,7 +5,9 @@ import DonationForm from '../components/DonationForm';
 import DonationHistory from '../components/DonationHistory';
 import './css/personal_page.css';
 import { DataTable } from '../components/DataTable';
-import { getItemByName, getItems } from '../api';
+import { checkBalance, getItemByName, getItems } from '../api';
+import { FaDonate } from 'react-icons/fa';
+import { Button } from '../ui/button';
 
 const DonationWrapper = styled.div`
   width: 100%;
@@ -27,7 +29,7 @@ const ProjectsWrapper = styled.div`
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  width: 100%;
+  width: 80vw;
 `;
 
 interface DonationRecord {
@@ -71,13 +73,24 @@ const PersonalPage: React.FC = () => {
     setDonationRecords([...donationRecords, newRecord]);
   };
 
+  const handleCheckBalance = async () => {
+    await checkBalance('Cheesecake');
+    const data = await getItemByName("Oscar");
+    console.log(Number(data.balance.total))
+    setBalance(Number(data.balance.total))
+  }
+
   return (
     <DonationWrapper>
       <DonationHeader>Total Amount: {balance.toString()}</DonationHeader>
+      <Button onClick={handleCheckBalance}>
+        查看餘額
+      </Button>
+      <span style={{height:'5vh'}}></span>
       <ProjectsWrapper>
-        <ProjectModal title="Project 1" description="Description of Project 1" />
-        <ProjectModal title="Project 2" description="Description of Project 2" />
-        <ProjectModal title="Project 3" description="Description of Project 3" />
+        <ProjectModal title="台大電機系學會" description="幫助可愛的學弟妹" route='/project'/>
+        <ProjectModal title="青鳥東" description="沒有討論，不是民主" route='/project2'/>
+        <ProjectModal title="廁所基金" description="你不掃廁所，就請外面的人來掃廁所" route='/project3'/>
       </ProjectsWrapper>
       {/* <DonationForm onDonate={handleDonate} /> */}
       {/* <DataTable /> */}

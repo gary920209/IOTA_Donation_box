@@ -41,9 +41,9 @@ const Sidebar: React.FC = () => {
                 </a>
               </li>
               <li className={activeMenu === 'audience' ? 'active' : ''} onClick={() => handleMenuClick('audience')}>
-                <a href="#">
+                <a href="/personal">
                   <User className="icon" />
-                  <span className="text">Audience</span>
+                  <span className="text">Personal Page</span>
                   <CaretDown className="arrow" />
                 </a>
                 <ul className={`sub-menu ${activeMenu === 'audience' ? 'expanded' : ''}`}>

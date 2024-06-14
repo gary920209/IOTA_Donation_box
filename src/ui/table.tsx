@@ -88,6 +88,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
+    style={{color: "white"}}
     {...props}
   />
 ))
@@ -100,6 +101,7 @@ const TableCaption = React.forwardRef<
   <caption
     ref={ref}
     className={cn("mt-4 text-sm text-muted-foreground", className)}
+    style={{color: "white"}}
     {...props}
   />
 ))

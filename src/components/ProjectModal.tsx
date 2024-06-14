@@ -15,12 +15,13 @@ import { CircleChevronRight } from "lucide-react";
 interface ProjectModalProps {
     title: string;
     description: string;
+    route: string;
 }
 
-const ProjectModal: React.FC<ProjectModalProps> = ({ title, description }) => {
+const ProjectModal: React.FC<ProjectModalProps> = ({ title, description, route }) => {
     const navigate = useNavigate();
     const routeToProjectPage = () => {
-        navigate('/project');
+        navigate(route);
         console.log('Route to project page');
     }
     return (
@@ -30,7 +31,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ title, description }) => {
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-                <p>Card Content</p>
+                <p>{route}</p>
             </CardContent>
             <CardFooter>
                 <Button className="w-full" onClick={routeToProjectPage}>

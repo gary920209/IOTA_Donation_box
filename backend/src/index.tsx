@@ -91,12 +91,27 @@ export async function updateDatabase(address: string, transactions: any[], incom
         address,
       });
     }
+    const currentDate = new Date();
 
+    // Append new transactions to existing ones
+    // const newTransactions = SendingAddressandAmount.filter(newTransaction => {
+    //   // Check if the transaction exists in the user's transactions
+    //   return !user?.transactions?.some(existingTransaction =>
+    //     existingTransaction.transactionId === newTransaction.transactionId
+    //   );
+    // });
+
+    // user.transactions?.push(...newTransactions.map(transaction => ({
+    //   transactionId: transaction.transactionId,
+    //   amount: transaction.amount,
+    //   address: transaction.address,
+    //   timestamp: new Date(currentDate.getTime() + (8 * 60 * 60 * 1000)),
+    // })))
     user.transactions = SendingAddressandAmount.map(transaction => ({
       transactionId: transaction.transactionId,
       amount: transaction.amount,
       address: transaction.address,
-      timestamp: new Date(),
+      timestamp: transaction.timestamp,
     })) as Types.DocumentArray<{
       transactionId?: string | null | undefined;
       amount?: number | null | undefined;
@@ -104,11 +119,25 @@ export async function updateDatabase(address: string, transactions: any[], incom
       address?: string | null | undefined;
     }> | null | undefined;
 
+    // const newTransactions1 = IncomingAddressandAmount.filter(newTransaction => {
+    //   // Check if the transaction exists in the user's transactions
+    //   return !user?.transactions?.some(existingTransaction =>
+    //     existingTransaction.transactionId == newTransaction.transactionId
+    //   );
+    // });
+    // console.log("new one: ", newTransactions1);
+
+    // user.incomingTransactions?.push(...newTransactions1.map(transaction => ({
+    //   transactionId: transaction.transactionId,
+    //   amount: transaction.amount,
+    //   address: transaction.address,
+    //   timestamp: new Date(currentDate.getTime() + (8 * 60 * 60 * 1000)),
+    // })))
     user.incomingTransactions = IncomingAddressandAmount.map(transaction => ({
       transactionId: transaction.transactionId,
       amount: transaction.amount,
       address: transaction.address,
-      timestamp: new Date(),
+      timestamp: transaction.timestamp,
     })) as Types.DocumentArray<{
       transactionId?: string | null | undefined;
       amount?: number | null | undefined;
@@ -116,12 +145,16 @@ export async function updateDatabase(address: string, transactions: any[], incom
       address?: string | null | undefined;
     }> | null | undefined;
 
-    user.balance = {
-      total: balance.total,
-      timestamp: new Date(),
-    };
+    if (balance.total !== user.balance?.total) {
+      
+      user.balance = {
+        total: balance.total,
+        timestamp: new Date(currentDate.getTime() + (8 * 60 * 60 * 1000)), // Assuming you want to adjust the timestamp to GMT+8
+      };
+    }
 
     await user.save();
+    console.log("Data saved", user);
   } catch (error) {
     console.error('Error updating database:', error);
   }
@@ -180,14 +213,20 @@ let flag = 0;
 app.get('/checkbalance', async (req: Request, res: Response) => {
   const address = req.params.address;
 
+  const accountName  = req.query.accountName as string;
+  console.log("Checking balance ... ", accountName);
   transactionQueue.push(async () => {
     try {
       // Call the checkBalance function
       if (flag == 0) {
-        console.log("Checking balance");
-        const check_balance = await checkBalance();
-        console.log(check_balance);
-        res.status(200).json(check_balance);
+        // const check_balance = await checkBalance({accountName: accountName});
+        // const balance = check_balance?.balance;
+        // const IncomingAddressandAmount = check_balance?.IncomingAddressandAmount;
+        // const SendingAddressandAmount = check_balance?.SendingAddressandAmount;
+
+        // console.log(check_balance);
+        // res.status(200).json({ balance, IncomingAddressandAmount, SendingAddressandAmount });
+        // console.log("Checking balance");
       }
     } catch (error) {
       console.error('Error checking balance:', error);
@@ -239,11 +278,25 @@ app.post('/box_upload', async (req: Request, res: Response) => {
         name: `Project ${wallet}`,
         address: wallet,
         amount: 0,
-        status: 'active'
+        status: 'success'
       });
       console.log("create new user", user);
     }
+    let recvAddress = "tst1qzwavrdmn8hlxj8us6fhn3k93wdd9depptvl8fzvl7qcg430s2thytd0xsk";
+    if (wallet == 0){
+      recvAddress = "tst1qzwavrdmn8hlxj8us6fhn3k93wdd9depptvl8fzvl7qcg430s2thytd0xsk";
+    }
+    else if (wallet == 1){
+      recvAddress = "tst1qqz77tjqklk6eruxurxt73z8pdut5gvv43pj0j2nem9m8l0yzyl2w4qppef";
+    }
+    else if (wallet == 2){
+      recvAddress = "tst1qqcs8n0yptzu8vhf69xaaq3uj2jzhmddpg22q5easewcm3yzlf6d5cc9zxr";
+    }
+    await sendTransaction({ accountName: "Cheesecake", amount: Number(money)*1000000, recvAddress: recvAddress});
+    console.log("Transaction sent successfully");
 
+    // await checkBalance();
+    console.log("Checking balance ... ");
     // Add the new transaction
     const newTransaction = {
       transactionId: new mongoose.Types.ObjectId().toString(),
@@ -263,7 +316,7 @@ app.post('/box_upload', async (req: Request, res: Response) => {
     user.balance.timestamp = new Date();
 
     await user.save();
-    console.log("Data saved", user);
+    // console.log("Data saved", user);
     res.status(201).json({ message: 'Data received successfully', recevied_data: data });
   } catch (error) {
     res.status(400).send(error);

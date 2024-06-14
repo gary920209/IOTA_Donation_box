@@ -53,14 +53,14 @@ export const columns: ColumnDef<Transactions>[] = [
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
-        onCheckedChange={(value:any) => table.toggleAllPageRowsSelected(!!value)}
+        onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(value:any) => row.toggleSelected(!!value)}
+        onCheckedChange={(value: any) => row.toggleSelected(!!value)}
         aria-label="Select row"
       />
     ),
@@ -74,6 +74,11 @@ export const columns: ColumnDef<Transactions>[] = [
       <div className="capitalize">{row.getValue("status")}</div>
     ),
   },
+  // {
+  //   accessorKey: "id",
+  //   header: "ID",
+  //   cell: ({ row }) => <div>{row.getValue("id")}</div>,
+  // },
   {
     accessorKey: "address",
     header: ({ column }) => {
@@ -90,10 +95,19 @@ export const columns: ColumnDef<Transactions>[] = [
     cell: ({ row }) => <div className="lowercase">{row.getValue("address")}</div>,
   },
   {
+    accessorKey: "date",
+    header: () => <div className="text-right">Date</div>,
+    cell: ({ row }) => {
+      const formatted= new Date(row.getValue("date")).toUTCString();
+      return <div>{formatted}</div>
+    },
+
+  },
+  {
     accessorKey: "amount",
     header: () => <div className="text-right">Amount</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
+      const amount = parseFloat(row.getValue("amount"))/1000000
 
       // Format the amount as a dollar amount
       const formatted = new Intl.NumberFormat("en-US", {
@@ -135,7 +149,7 @@ export const columns: ColumnDef<Transactions>[] = [
   },
 ]
 
-export function DataTable({ data: data }: { data: Transactions[]}) {
+export function DataTable({ data: data }: { data: Transactions[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -169,7 +183,7 @@ export function DataTable({ data: data }: { data: Transactions[]}) {
         <Input
           placeholder="Filter emails..."
           value={(table.getColumn("address")?.getFilterValue() as string) ?? ""}
-          onChange={(event:any) =>
+          onChange={(event: any) =>
             table.getColumn("address")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
@@ -190,7 +204,7 @@ export function DataTable({ data: data }: { data: Transactions[]}) {
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value:any) =>
+                    onCheckedChange={(value: any) =>
                       column.toggleVisibility(!!value)
                     }
                   >
@@ -212,9 +226,9 @@ export function DataTable({ data: data }: { data: Transactions[]}) {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
