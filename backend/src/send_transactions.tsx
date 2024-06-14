@@ -53,7 +53,7 @@ export async function sendTransaction({ accountName, amount, recvAddress }: Send
 
             console.log(`Sending '${amount}' coin(s) to '${recvAddress}'...`);
             const params: SendParams[] = [
-                { address: recvAddress, amount: BigInt(Number(amount)) },
+                { address: recvAddress, amount: String(Number(amount)) },
             ];
 
             // Send the transaction

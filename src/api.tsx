@@ -57,9 +57,11 @@ export const sendTransaction = async (accountName: string, amount: number, recvA
     }
 }
 
-export const checkBalance = async () => {
+export const checkBalance = async (accountName: string) => {
     try {
-        const response = await axios.get(`${API_URL}/checkbalance`);
+        const response = await axios.get(`${API_URL}/checkbalance`, { params: { accountName } });
+        console.log(response.data);
+        console.log("api", accountName)
         return response.data;
     } catch (error) {
         console.error('Error checking balance:', error);

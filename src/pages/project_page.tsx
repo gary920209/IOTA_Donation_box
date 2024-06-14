@@ -18,6 +18,7 @@ const PageWrapper = styled.div`
   justify-content: flex-start;
   align-items: center;
   margin-top: 20px;
+  overflow: visible;
   // background-color: #2E4053;
 `;
 
@@ -37,39 +38,6 @@ const HeaderWrapper = styled.div`
   align-items: center;
   width: 100%;
 `;
-
-// const data: Transactions[] = [
-//   {
-//     id: "m5gr84i9",
-//     amount: 316,
-//     status: "success",
-//     address: "ken99@yahoo.com",
-//   },
-//   {
-//     id: "3u1reuv4",
-//     amount: 242,
-//     status: "success",
-//     address: "Abe45@gmail.com",
-//   },
-//   {
-//     id: "derv1ws0",
-//     amount: 837,
-//     status: "processing",
-//     address: "Monserrat44@gmail.com",
-//   },
-//   {
-//     id: "5kma53ae",
-//     amount: 874,
-//     status: "success",
-//     address: "Silas22@gmail.com",
-//   },
-//   {
-//     id: "bhqecj4p",
-//     amount: 721,
-//     status: "failed",
-//     address: "carmella@hotmail.com",
-//   },
-// ]
 
 // export type Transactions = {
 //   id: string
@@ -92,14 +60,16 @@ const ProjectPage: React.FC = () => {
   const closeModal = () => setModalIsOpen(false);
   const Donation_Address = 'tst1qzwavrdmn8hlxj8us6fhn3k93wdd9depptvl8fzvl7qcg430s2thytd0xsk'
   const handleDonate = () => {
-    sendTransaction("Cheesecake", donationAmount, Donation_Address)
+    sendTransaction("Cheesecake", donationAmount*1000000, Donation_Address)
     setTotalDonations(totalDonations + donationAmount);
     setDonationAmount(0);
     closeModal();
   };
-  const handleCheckBalance = () => {
-    checkBalance();
-    console.log(balance)
+  const handleCheckBalance = async () => {
+    await checkBalance('Alice');
+    const data = await getItemByName("Alice");
+    console.log(Number(data.balance.total))
+    setBalance(Number(data.balance.total))
   }
 
   useEffect(() => {
@@ -114,7 +84,7 @@ const ProjectPage: React.FC = () => {
         // address: string
         // date ?: string
         const transactionsData = data.transactions.map((transaction: any) => ({
-          id: transaction.transactionId,
+          transactionId: transaction.transactionId,
           date: transaction.timestamp,
           status: 'success',
           address: transaction.address,

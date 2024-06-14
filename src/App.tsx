@@ -9,7 +9,16 @@ import Sidebar from './components/Sidebar';
 
 const Span = styled.span`
   display: inline-block;
-  margin-top: 7vh;
+  margin-top: 50vh;
+`;
+
+const ContentWrapper = styled.div`
+  // flex-grow: 1; /* Content takes remaining space */
+  // overflow-y: auto; /* Allow vertical scrolling */
+  // padding: 0 20px;
+  // fixed: top;
+  position: fixed;
+  z-index: 1000; 
 `;
 
 const MainWrapper = styled.div`
@@ -17,17 +26,23 @@ const MainWrapper = styled.div`
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  margin-top: 0.5vh;
+  margin-top: 50vh;
+  overflow: visible;
+  height: 150vh;
+  width: 100%;
 `;
 
 const ProjectPage = lazy(() => import('./pages/project_page'));
+const ProjectPage2 = lazy(() => import('./pages/project2_page'));
+const ProjectPage3 = lazy(() => import('./pages/project3_page'));
 const PersonalPage = lazy(() => import('./pages/personal_page'));
+
 const PersonalPageTable = lazy(() => import('./pages/personal_page_table'));
 
 // const Donation = lazy(() => import('./pages/donation'));
 
 function App() {
-  const ref: RefObject<HTMLDivElement>  = useRef(null);
+  const ref: RefObject<HTMLDivElement> = useRef(null);
 
   const handleClick = () => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,13 +51,15 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Navbar/>
+      <ContentWrapper>
+        <Navbar />
+      </ContentWrapper>
+      {/* <Span /> */}
       <MainWrapper>
-        <Sidebar/>
-        {/* <Span/> */}
+        <Sidebar />
         <Routes>
           <Route path='/' element={<ProjectPage />} />
-          
+
           <Route path='personal' element={
             <Suspense fallback={<Skeleton count={5} />}>
               <PersonalPage />
@@ -57,6 +74,18 @@ function App() {
           <Route path='project' element={
             <Suspense fallback={<Skeleton count={5} />}>
               <ProjectPage />
+            </Suspense>
+          } />
+
+          <Route path='project2' element={
+            <Suspense fallback={<Skeleton count={5} />}>
+              <ProjectPage2 />
+            </Suspense>
+          } />
+
+          <Route path='project3' element={
+            <Suspense fallback={<Skeleton count={5} />}>
+              <ProjectPage3 />
             </Suspense>
           } />
 
@@ -86,11 +115,11 @@ function App() {
           } /> */}
 
           {/* <Route path='*' element={<ErrorPage />} /> */}
-        
+
         </Routes>
       </MainWrapper>
-    </BrowserRouter>
-    
+    </BrowserRouter >
+
   );
 }
 

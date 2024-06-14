@@ -24,9 +24,11 @@ const walletOptions: WalletOptions = {
     },
 };
 const wallet = new Wallet(walletOptions);
-
+interface CheckBalanceParams {
+    accountName: string;
+}
 // This example syncs the account and prints the balance.
-const checkBalance = async () => {
+const checkBalance = async ({accountName}: CheckBalanceParams) => {
     console.log('Checking balance...');
     for (const envVar of ['WALLET_DB_PATH', 'NODE_URL', 'STRONGHOLD_PASSWORD']) {
         if (!(envVar in process.env)) {
@@ -38,7 +40,7 @@ const checkBalance = async () => {
 
         // Create a new account
         // const account = await wallet.createAccount({
-        //     alias: 'Alice',
+        //     alias: 'project3',
         // });
         // console.log('Generated new account:', account.getMetadata().alias);
 
@@ -53,7 +55,7 @@ const checkBalance = async () => {
         // Only interested in new outputs here.
         // await wallet.listen([WalletEventType.NewOutput], callback);
         // const account = await wallet.getAccount('Cheesecake');
-        const account = await wallet.getAccount('Alice');
+        const account = await wallet.getAccount(accountName);
         // wallet.removeLatestAccount();
         // const account = await wallet.getAccount('Cheesecake');
         const addresses = await account.addresses();
@@ -62,6 +64,7 @@ const checkBalance = async () => {
         // await wallet.getClient();
         await account.sync({ syncIncomingTransactions: true });
 
+        const currentDate = new Date();
         const transactions = await account.transactions();
         console.log('Sent transactions:');
         // for (const transaction of transactions)
@@ -79,10 +82,10 @@ const checkBalance = async () => {
                 const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
                 const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
                 const address = addressUnlockCondition.address.toString();
-                SendingAddressandAmount.push({ address: address, amount: output.amount, transactionId: transactions[i].transactionId });
+                SendingAddressandAmount.push({ address: address, amount: output.amount, transactionId: transactions[i].transactionId, timestamp: new Date(currentDate.getTime() + (8 * 60 * 60 * 1000)),});
                 // Now you have the address, you can track transactions involving this address
-                // console.log(`Address Type: ${addressType}`);
-                // console.log(`Sent to address: ${address} Amount: ${output.amount}`);
+                console.log(`Address Type: ${addressType}`);
+                console.log(`Sent to address: ${address} Amount: ${output.amount}`);
             }
             else if (output.type === 4) { // AliasOutput
                 const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition;
@@ -110,7 +113,7 @@ const checkBalance = async () => {
                 const addressUnlockCondition = output.unlockConditions[0] as AddressUnlockCondition; // Extract the recipient address
                 const addressType = (addressUnlockCondition.type == 0) ? 'Ed25519' : (addressUnlockCondition.type == 4) ? 'Alias' : 'Unknown';
                 const address = addressUnlockCondition.address.toString();
-                IncomingAddressandAmount.push({ address: address, amount: output.amount, transactionId: incomingTransactions[i].transactionId });
+                IncomingAddressandAmount.push({ address: address, amount: output.amount, transactionId: incomingTransactions[i].transactionId, timestamp: new Date(currentDate.getTime() + (8 * 60 * 60 * 1000)) });
                 // Now you have the address, you can track transactions involving this address
                 // console.log(`Address Type: ${addressType}`);
                 // console.log(`Sent to address: ${address} Amount: ${output.amount}`);
@@ -133,13 +136,13 @@ const checkBalance = async () => {
         const primaryAddress = addresses[0].address;
         await updateDatabase(primaryAddress, transactions, incomingTransactions, balance.baseCoin, IncomingAddressandAmount, SendingAddressandAmount);
 
-        return { transactions, incomingTransactions, balance };
+        return { balance, IncomingAddressandAmount, SendingAddressandAmount };
     } catch (error) {
         console.error('Error: ', error);
     }
 }
 export default checkBalance;
-// checkBalance();
+checkBalance({accountName: 'Alice'});
 
 // checkBalance().then(() => process.exit());
 
